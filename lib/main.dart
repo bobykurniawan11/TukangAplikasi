@@ -1,8 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:tutorialfirebase/DaftarPage.dart';
-import 'package:tutorialfirebase/Dashboard.dart';
-import 'package:tutorialfirebase/ForgotPasswordPage.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MyApp());
 
@@ -27,16 +29,21 @@ class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
+
 class _LoginPageState extends State<LoginPage> {
-  bool _autoValidate = false;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   TextEditingController email_controller = TextEditingController();
   TextEditingController password_controller = TextEditingController();
   final _formKey = new GlobalKey<FormState>();
+  GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  FacebookLogin facebookLogin = FacebookLogin();
+  var profile;
+  bool isLoggedIn = false;
 
   @override
   void initState() {
+    print(isLoggedIn);
     super.initState();
   }
 
@@ -46,97 +53,128 @@ class _LoginPageState extends State<LoginPage> {
       child: Scaffold(
         backgroundColor: Colors.blueAccent,
         key: scaffoldKey,
-        body:Form(
+        body: Form(
           key: _formKey,
-          child:  Center(
+          child: Center(
             child: Container(
               color: Colors.white,
               child: Padding(
                   padding: EdgeInsets.all(36),
                   child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          height: 150,
-                          child: Image.asset(
-                            "images/logo.png",
-                            fit: BoxFit.fill,
+                    child: (!isLoggedIn)
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Container(
+                                height: 150,
+                                child: Image.asset(
+                                  "images/logo.png",
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Column(
+                                children: <Widget>[
+                                  SignInButton(
+                                    Buttons.GoogleDark,
+                                    onPressed: () async {
+                                      await _googleSignIn
+                                          .signIn()
+                                          .then((result) {
+                                        //Jika berhasil
+                                        setState(() {
+                                          isLoggedIn = true;
+                                        });
+                                      }).catchError((err) {
+                                        //Jika terjadi error
+                                        showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: Text("Error"),
+                                                content: Text(err.message),
+                                                actions: [
+                                                  FlatButton(
+                                                    child: Text("Ok"),
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                  )
+                                                ],
+                                              );
+                                            });
+                                      });
+                                    },
+                                  ),
+                                  SignInButton(
+                                    Buttons.Facebook,
+                                    onPressed: () async {
+                                      final facebookLogin = FacebookLogin();
+                                      final result = await facebookLogin
+                                          .logIn(['email']).then((result) {
+                                        setState(() {
+                                          getFacebookUser(result.accessToken.token);
+                                          isLoggedIn = true;
+                                        });
+                                      }).catchError((err) {
+                                        //Jika terjadi error
+                                        showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: Text("Error"),
+                                                content: Text(err.message),
+                                                actions: [
+                                                  FlatButton(
+                                                    child: Text("Ok"),
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                  )
+                                                ],
+                                              );
+                                            });
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Container(
+                                height: 150,
+                                child: Image.network(
+                                  (profile == null)
+                                      ? _googleSignIn.currentUser.photoUrl
+                                      : profile['picture']['data']['url'],
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Text((profile == null)
+                                  ? _googleSignIn.currentUser.displayName
+                                  : profile['name']),
+                              FlatButton(
+                                child: Text("Logout"),
+                                onPressed: () {
+                                  setState(() {
+                                    isLoggedIn = false;
+                                  });
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        TextFormField(
-                          validator: validateEmail,
-                          controller: email_controller,
-                          style: TextStyle(fontSize: 20),
-                          decoration: InputDecoration(
-                              contentPadding:
-                              EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                              hintText: "Email",
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(32.0))),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        TextFormField(
-                          validator: validatePassword,
-                          controller: password_controller,
-                          obscureText: true,
-                          style: TextStyle(fontSize: 20),
-                          decoration: InputDecoration(
-                              contentPadding:
-                              EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                              hintText: "Password",
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(32.0))),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        FlatButton(
-                          color: Colors.blueAccent,
-                          child: Text(
-                            "Login",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          onPressed: () {
-                            _validateInputs();
-                          },
-                        ),
-                        SizedBox(
-                          height: 100,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            FlatButton(
-                              child: Text("Daftar"),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => DaftarPage()),
-                                );
-                              },
-                            ),
-                            FlatButton(
-                              child: Text("Lupa Password"),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => ForgotPasswordPage()),
-                                );
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
                   )),
             ),
           ),
@@ -144,72 +182,13 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-  String validateEmail(String value) {
-    if (value.length < 1) {
-      return 'Please type your email address';
-    } else {
-      Pattern pattern =
-          r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-      RegExp regex = new RegExp(pattern);
-      if (!regex.hasMatch(value))
-        return 'Wrong email format';
-      else
-        return null;
-    }
-  }
-  String validatePassword(String value) {
-    if (value.length < 8)
-      return 'Minimum 8 character';
-    else
-      return null;
-  }
-  void _validateInputs() {
-    if (_formKey.currentState.validate()) {
-      setState(() {
-        prosesLogin();
-        _formKey.currentState.save();
-      });
-    } else {
-      setState(() {
-        _autoValidate = true;
-      });
-    }
-  }
 
-  prosesLogin(){
-    //Instance firebase
-    FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-    //Login Firebase
-    firebaseAuth
-        .signInWithEmailAndPassword(email: email_controller.text, password: password_controller.text)
-        .then((result) {
-      print(result);
-      //Hasilnya jika proses berhasil
-      email_controller.text    = "";
-      password_controller.text = "";
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => Dashboard()),
-      );
-    }).catchError((err) {
-      print(err.toString());
-      //Jika ada error, pesan akan muncul dengan dialog
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Error"),
-              content: Text(err.message),
-              actions: [
-                FlatButton(
-                  child: Text("Ok"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            );
-          });
+  getFacebookUser(token) async {
+    final graphResponse = await http.get(
+        'https://graph.facebook.com/v2.12/me?fields=picture,name,first_name,last_name,email&access_token=${token}');
+    setState(() {
+      profile = json.decode(graphResponse.body);
+      print(profile['picture']['data']['url']);
     });
   }
 }

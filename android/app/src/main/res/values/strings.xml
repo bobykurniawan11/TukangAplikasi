@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Your App Name here.</string>
+
+    <!-- APP ID ANDA DISINI -->
+    <string name="facebook_app_id">4089086677830224</string>
+
+    <!--
+        formatnya fb-AppId
+    -->
+    <string name="fb_login_protocol_scheme">fb4089086677830224</string>
+</resources>
