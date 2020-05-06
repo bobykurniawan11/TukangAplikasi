@@ -90,3 +90,4 @@ post_install do |installer|
 end
 
 pod 'Firebase/MLVisionTextModel'
+pod 'Firebase/MLVisionFaceModel'

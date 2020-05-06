@@ -7,6 +7,9 @@ PODS:
   - Firebase/MLVision (6.13.0):
     - Firebase/CoreOnly
     - FirebaseMLVision (~> 0.19.0)
+  - Firebase/MLVisionFaceModel (6.13.0):
+    - Firebase/CoreOnly
+    - FirebaseMLVisionFaceModel (~> 0.19.0)
   - Firebase/MLVisionTextModel (6.13.0):
     - Firebase/CoreOnly
     - FirebaseMLVisionTextModel (~> 0.19.0)
@@ -57,6 +60,8 @@ PODS:
     - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
     - GTMSessionFetcher/Core (~> 1.1)
     - Protobuf (~> 3.5)
+  - FirebaseMLVisionFaceModel (0.19.0):
+    - FirebaseMLVision (~> 0.19)
   - FirebaseMLVisionTextModel (0.19.0):
     - FirebaseMLVision (~> 0.19)
   - Flutter (1.0.0)
@@ -122,6 +127,7 @@ PODS:
   - Protobuf (3.10.0)
 
 DEPENDENCIES:
+  - Firebase/MLVisionFaceModel
   - Firebase/MLVisionTextModel
   - firebase_ml_vision (from `.symlinks/plugins/firebase_ml_vision/ios`)
   - Flutter (from `Flutter`)
@@ -138,6 +144,7 @@ SPEC REPOS:
     - FirebaseInstanceID
     - FirebaseMLCommon
     - FirebaseMLVision
+    - FirebaseMLVisionFaceModel
     - FirebaseMLVisionTextModel
     - GoogleAPIClientForREST
     - GoogleAppMeasurement
@@ -169,6 +176,7 @@ SPEC CHECKSUMS:
   FirebaseInstanceID: ebd2ea79ee38db0cb5f5167b17a0d387e1cc7b6e
   FirebaseMLCommon: 074a67e05122b1c9f6401a4e33b2cea3b4efd224
   FirebaseMLVision: 7a456009787690e3b53436092ae9b635563de8f3
+  FirebaseMLVisionFaceModel: d6ba42000f263df52187aee936262bc2002b3389
   FirebaseMLVisionTextModel: c264caa3100ca804580bf2a7c1cb9ff390d1f471
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_plugin_android_lifecycle: dc0b544e129eebb77a6bfb1239d4d1c673a60a35
@@ -183,6 +191,6 @@ SPEC CHECKSUMS:
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   Protobuf: a4dc852ad69c027ca2166ed287b856697814375b
 
-PODFILE CHECKSUM: 73ff672380b28998debd8ee769971b911123ccf5
+PODFILE CHECKSUM: d5d5ce3a7522c039575831495cff7a85c49620c0
 
 COCOAPODS: 1.8.4

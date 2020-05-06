@@ -30,9 +30,12 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  File pickedImage;
+  File pickedImage = null;
   var text = '';
   bool imageLoaded = false;
+  List<Rect> rect = new List<Rect>();
+  bool isFaceDetected = false;
+  var imageFile;
 
   @override
   void initState() {
@@ -45,21 +48,69 @@ class _MainPageState extends State<MainPage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         key: scaffoldKey,
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            (pickedImage == null) ? Container() : Image.file(pickedImage),
-            FlatButton(
-              child: Text("Pilih Gambar"),
-              onPressed: () {
-                getImage();
-              },
-              color: Colors.greenAccent,
-            ),
-            Text(text)
-          ],
-        ),
+        body: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              (pickedImage == null) ? Container() : Container(height: 200,width: 200, child: Image.file(pickedImage),),
+              FlatButton(
+                child: Text("Pilih Gambar"),
+                onPressed: () {
+                  getImage();
+                },
+                color: Colors.greenAccent,
+              ),
+              (pickedImage != null)
+                  ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  FlatButton(
+                    child: Text("Baca teks"),
+                    onPressed: () {
+                      setState(() {
+                        isFaceDetected = false;
+                        TextrecognitionProcess();
+                      });
+                    },
+                    color: Colors.red,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  FlatButton(
+                      child: Text("Deteksi Wajah"),
+                      onPressed: () {
+                        setState(() {
+                          FacerecognitionProcess();
+                        });
+                      },
+                      color: Colors.blue),
+                ],
+              )
+                  : Container(),
+              (!isFaceDetected)
+                  ? Text(text)
+                  : Center(
+                child: Container(
+                  height: 200,
+                  width: 200,
+                  margin: EdgeInsets.fromLTRB(0, 0, 0, 8),
+                  child: FittedBox(
+                    child: SizedBox(
+                      width: imageFile.width.toDouble(),
+                      height: imageFile.height.toDouble(),
+                      child: CustomPaint(
+                        painter:
+                        FacePainter(rect: rect, imageFile: imageFile),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        )
       ),
     );
   }
@@ -68,7 +119,6 @@ class _MainPageState extends State<MainPage> {
     var awaitImage = await ImagePicker.pickImage(source: ImageSource.gallery);
     setState(() {
       pickedImage = awaitImage;
-      TextrecognitionProcess();
       imageLoaded = true;
     });
   }
@@ -94,4 +144,55 @@ class _MainPageState extends State<MainPage> {
     });
     textRecognizer.close();
   }
+
+  FacerecognitionProcess() async {
+    FirebaseVisionImage visionImage = FirebaseVisionImage.fromFile(pickedImage);
+    FaceDetector faceDetector = FirebaseVision.instance.faceDetector();
+
+    imageFile = await pickedImage.readAsBytes();
+    imageFile = await decodeImageFromList(imageFile);
+
+    //Proses
+    final List<Face> faces = await faceDetector.processImage(visionImage);
+    if (rect.length > 0) {
+      rect = new List<Rect>();
+    }
+    for (Face face in faces) {
+      rect.add(face.boundingBox);
+    }
+
+    setState(() {
+      isFaceDetected = true;
+    });
+  }
+}
+
+class FacePainter extends CustomPainter {
+  List<Rect> rect;
+  var imageFile;
+
+  FacePainter({@required this.rect, @required this.imageFile});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (imageFile != null) {
+      canvas.drawImage(imageFile, Offset.zero, Paint());
+    }
+
+    for (Rect rectangle in rect) {
+      canvas.drawRect(
+        rectangle,
+        Paint()
+          ..color = Colors.teal
+          ..strokeWidth = 5.0
+          ..style = PaintingStyle.stroke,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+
 }
