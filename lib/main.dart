@@ -57,6 +57,10 @@ class _MainPageState extends State<MainPage> {
               FlatButton(
                 child: Text("Pilih Gambar"),
                 onPressed: () {
+                  setState(() {
+                    imageLoaded = false;
+                    pickedImage = null;
+                  });
                   getImage();
                 },
                 color: Colors.greenAccent,
@@ -116,6 +120,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   getImage() async {
+
     var awaitImage = await ImagePicker.pickImage(source: ImageSource.gallery);
     setState(() {
       pickedImage = awaitImage;
